@@ -17,13 +17,13 @@ class Note:
         pitch: the note's pitch (in string format with # used for sharps and no
             flats allowed).
 
-        octave: the note's octave.
+        octave: the note's octave (must be integral).
 
-        time: what beat the note starts on.
+        time: what beat the note starts on (does not have to be integral).
 
         duration: how many beats the note lasts (doesn't have to be integral).
 
-        instrument: the instrument playing the note (must be integral)
+        instrument: the instrument playing the note (must be integral).
 
         key (optional): the scale the note is in (if used, changing pitch will
             shift along the scale and not the chromatic scale). This scale
@@ -36,7 +36,7 @@ class Note:
         self.octave = octave
         self.time = time
         self.duration = duration
-        self._instrument = instrument
+        self.instrument = instrument
         if scale:
             # Convert the scale to a machine-readable format.
             self.scale = list(map(lambda p: PITCH_TO_NUM[p], scale))
@@ -57,7 +57,7 @@ class Note:
         '''
         # The :02 part of the pitch portion front pads a 0 to reach length 2 if
         # needed.
-        formatted = 'i{0} {1} {2} {3}.{4:02}'.format(self._instrument,
+        formatted = 'i{0} {1} {2} {3}.{4:02}'.format(self.instrument,
                                                      self.time, self.duration,
                                                      self.octave, self.pitch)
         # If there are additional parameters, add them to the end.
