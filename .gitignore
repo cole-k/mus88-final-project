@@ -7,6 +7,10 @@
 # couldn't think of a better output file name.
 output.txt
 
+# Sound files
+*.aif
+*.wav
+
 # Pickled dataframes
 *.pickle
 
