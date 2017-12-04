@@ -129,7 +129,7 @@ if __name__ == '__main__':
         # Cmaj
         scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
         # Parameters for my csd.
-        params = [1, 2, 1, 1, 1, 1]
+        params = [-1, 2, 1, 1, 1, 1]
         note = Note('C', 8, 0, 1, 1, scale, *params)
         # Starting value is the first element, starting length is its duration.
         prev_value, note.duration = next(open_prices_rle)
