@@ -1,39 +1,99 @@
-from collections import namedtuple
 import quandl
+import itertools
 import pandas as pd
-import numpy as np
 
-# Simple note class
+# Translation of notes to numbers
+PITCH_TO_NUM = {'C' : 0, 'C#' : 1, 'D' : 2, 'D#' : 3, 'E' : 4, 'F' : 5, 'F#' :
+        6, 'G' : 7, 'G#' : 8, 'A' : 9, 'A#' : 10, 'B' : 11}
+
 class Note:
-    # Translation of notes to numbers
-    PITCH_TO_NUM = {'C' : 0, 'C#' : 1, 'D' : 2, 'D#' : 3, 'E' : 4, 'F' : 5, 'F#' : 6,
-            'G' : 7, 'G#' : 8, 'A' : 9, 'A#' : 10, 'B' : 11}
+    '''
+    A simple note class.
+    '''
+    def __init__(self, pitch, octave, time, duration, instrument, scale=None,
+            *params):
+        '''
+        pitch: the note's pitch (in string format with # used for sharps and no
+            flats allowed).    
 
-    def __init__(self, pitch, octave, time, duration, instrument, *params):
+        octave: the note's octave.
+
+        time: what beat the note starts on.
+
+        duration: how many beats the note lasts (doesn't have to be integral).
+
+        instrument: the instrument playing the note (must be integral)
+
+        key (optional): the scale the note is in (if used, changing pitch will
+            shift along the scale and not the chromatic scale). This scale
+            moves in the order of notes given (so you can give a scale not in
+            order).
+
+        *params (optional): additional parameters to give the instrument in
+            CSound, appended in order.
+        '''
+        self.octave = octave
+        self.time = time
+        self.duration = duration
+        self._instrument = instrument
+        if scale:
+            # Convert the scale to a machine-readable format.
+            self.scale = list(map(lambda p: PITCH_TO_NUM[p], scale))
+        else:
+            # Chromatic scale.
+            self.scale = list(range(12))
+        self.params = params
+
         # Convert the pitch to a machine-readable format.
-        self._pitch = PITCH_TO_NUM[pitch]
-        self._octave = octave
-        self._time = time
-        self._params = params
+        pitch = PITCH_TO_NUM[pitch]
+        self.pitch = pitch
+        # Location in the scale.
+        self._pitch_index = self.scale.index(pitch)
+
 
     def __str__(self):
-        # Returns a CSound representation of itself.
-        formatted = 'i{0} {1} {2} {3}.{4}'.format(self._instrument, self._time,
-                self._duration, self._octave, self_.pitch)
+        '''
+        Returns a csound representation of itself.
+        '''
+        # The :02 part of the pitch portion front pads a 0 to reach length 2 if
+        # needed.
+        formatted = 'i{0} {1} {2} {3}.{4:02}'.format(self._instrument, self.time,
+                self.duration, self.octave, self.pitch)
         # If there are additional parameters, add them to the end.
-        if self._params:
-            formatted.append(' ' + ' '.join(self._params))
+        if self.params:
+            formatted.append(' ' + ' '.join(self.params))
 
         return formatted
 
-    def change_pitch(by):
-        self._pitch += by 
-        # Take mod 12 (there are only 12 notes).
-        self._pitch %= 12
+
+    def change_pitch(self, by):
+        '''
+        Changes pitch by the amount given, shifting up an octave when shifting
+        past the last value in the scale, and down when shifting past the
+        first.
+
+        If the optional variable scale is declared, each step goes up one note
+        along that scale, not along the chromatic scale. If you don't want the
+        note guessing what octave shift it has, define your own method to
+        change pitch.
+        '''
+
+        self._pitch_index += by 
+        # Calculate how many octaves we're shifting by.
+        # Note that integer division behaves weird with negative numbers and we
+        # aren't actually off by one.
+        octave_shift = self._pitch_index // len(self.scale)
+        self.octave += octave_shift
+        # Mod by the length of the scale. 
+        self._pitch_index %= len(self.scale)
+        # Calculate the new pitch.
+        self.pitch = self.scale[self._pitch_index]
 
 
 def run_length_encode(l):
-    ''' Takes a list and returns a generator giving tuples (element, rle)'''
+    '''
+    Takes a list and returns a generator giving tuples (element, rle)
+    '''
     count, run_value = 1, l[0]
     for elem in l[1:]:
         # While equal to the run value, we increment.
@@ -48,13 +108,34 @@ def run_length_encode(l):
     yield (run_value, count)
 
 
-try:
-    intel_data = pd.read_pickle('intc.pickle')
-except:
-    # Get my API key.
-    quandl.ApiConfig.api_key = open('quandl_key.secret').read().strip()
-    # Read from Quandl.
-    intel_data = quandl.get("EOD/INTC")
-    # Cache for future use.
-    intel_data.to_pickle('intc.pickle')
+if __name__ == '__main__':
+    # Try to read data from the pickled dataframe.
+    try:
+        intel_data = pd.read_pickle('intc.pickle')
+    # Otherwise, grab it from the API.
+    except:
+        # Get the API key.
+        quandl.ApiConfig.api_key = open('quandl_key.secret').read().strip()
+        # Read from Quandl.
+        intel_data = quandl.get("EOD/INTC")
+        # Cache for future use.
+        intel_data.to_pickle('intc.pickle')
+
+    # Get the open price for INTC.
+    open_prices = intel_data['Open'].apply(lambda x: round(x))
+    open_prices_rle = run_length_encode(open_prices)
+    # Cmaj
+    scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+    note = Note('C', 8, 0, 1, 1, scale)
+    # Starting value is the first element, starting length is its duration.
+    prev_value, note.length = next(open_prices_rle)
+    for value, rle in itertools.islice(open_prices_rle, 40):
+        print(note)
+        # Move the time along.
+        note.time += note.length
+        # The new duration is the rle of the next value.
+        note.duration = rle
+        # Change pitch by the delta in value.
+        note.change_pitch(value - prev_value)
+        prev_value = value
 
