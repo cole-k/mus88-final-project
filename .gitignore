@@ -4,6 +4,8 @@
 *.secret
 # neovim thing?
 *~
+# couldn't think of a better output file name.
+output.txt
 
 # Pickled dataframes
 *.pickle

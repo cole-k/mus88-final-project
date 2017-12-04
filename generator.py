@@ -3,18 +3,19 @@ import itertools
 import pandas as pd
 
 # Translation of notes to numbers
-PITCH_TO_NUM = {'C' : 0, 'C#' : 1, 'D' : 2, 'D#' : 3, 'E' : 4, 'F' : 5, 'F#' :
-        6, 'G' : 7, 'G#' : 8, 'A' : 9, 'A#' : 10, 'B' : 11}
+PITCH_TO_NUM = {'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5, 'F#':
+                6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11}
+
 
 class Note:
     '''
     A simple note class.
     '''
     def __init__(self, pitch, octave, time, duration, instrument, scale=None,
-            *params):
+                 *params):
         '''
         pitch: the note's pitch (in string format with # used for sharps and no
-            flats allowed).    
+            flats allowed).
 
         octave: the note's octave.
 
@@ -50,21 +51,20 @@ class Note:
         # Location in the scale.
         self._pitch_index = self.scale.index(pitch)
 
-
     def __str__(self):
         '''
         Returns a csound representation of itself.
         '''
         # The :02 part of the pitch portion front pads a 0 to reach length 2 if
         # needed.
-        formatted = 'i{0} {1} {2} {3}.{4:02}'.format(self._instrument, self.time,
-                self.duration, self.octave, self.pitch)
+        formatted = 'i{0} {1} {2} {3}.{4:02}'.format(self._instrument,
+                                                     self.time, self.duration,
+                                                     self.octave, self.pitch)
         # If there are additional parameters, add them to the end.
         if self.params:
-            formatted.append(' ' + ' '.join(self.params))
+            formatted += ' ' + ' '.join(map(str, self.params))
 
         return formatted
-
 
     def change_pitch(self, by):
         '''
@@ -78,13 +78,13 @@ class Note:
         change pitch.
         '''
 
-        self._pitch_index += by 
+        self._pitch_index += by
         # Calculate how many octaves we're shifting by.
         # Note that integer division behaves weird with negative numbers and we
         # aren't actually off by one.
         octave_shift = self._pitch_index // len(self.scale)
         self.octave += octave_shift
-        # Mod by the length of the scale. 
+        # Mod by the length of the scale.
         self._pitch_index %= len(self.scale)
         # Calculate the new pitch.
         self.pitch = self.scale[self._pitch_index]
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     try:
         intel_data = pd.read_pickle('intc.pickle')
     # Otherwise, grab it from the API.
-    except:
+    except Exception as e:
         # Get the API key.
         quandl.ApiConfig.api_key = open('quandl_key.secret').read().strip()
         # Read from Quandl.
@@ -121,21 +121,25 @@ if __name__ == '__main__':
         # Cache for future use.
         intel_data.to_pickle('intc.pickle')
 
-    # Get the open price for INTC.
-    open_prices = intel_data['Open'].apply(lambda x: round(x))
-    open_prices_rle = run_length_encode(open_prices)
-    # Cmaj
-    scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
-    note = Note('C', 8, 0, 1, 1, scale)
-    # Starting value is the first element, starting length is its duration.
-    prev_value, note.length = next(open_prices_rle)
-    for value, rle in itertools.islice(open_prices_rle, 40):
-        print(note)
-        # Move the time along.
-        note.time += note.length
-        # The new duration is the rle of the next value.
-        note.duration = rle
-        # Change pitch by the delta in value.
-        note.change_pitch(value - prev_value)
-        prev_value = value
-
+    with open('output.txt', 'w') as output:
+        # Get the open price for INTC.
+        open_prices = intel_data['Open'].apply(lambda x: round(x))
+        # Get the run length encoding of the prices.
+        open_prices_rle = run_length_encode(open_prices)
+        # Cmaj
+        scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+        # Parameters for my csd.
+        params = [1, 2, 1, 1, 1, 1]
+        note = Note('C', 8, 0, 1, 1, scale, *params)
+        # Starting value is the first element, starting length is its duration.
+        prev_value, note.duration = next(open_prices_rle)
+        for value, rle in itertools.islice(open_prices_rle, 42):
+            output.write(str(note))
+            output.write('\n')
+            # Move the time along.
+            note.time += note.duration
+            # The new duration is the rle of the next value.
+            note.duration = rle
+            # Change pitch by the delta in value.
+            note.change_pitch(value - prev_value)
+            prev_value = value
