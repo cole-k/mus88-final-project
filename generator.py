@@ -18,18 +18,18 @@ class Note:
 
     def __str__(self):
         # Returns a CSound representation of itself.
-        formatted = 'i{0} {1} {2} {3}.{4}'.format(instrument, time, duration,
-                octave, pitch)
+        formatted = 'i{0} {1} {2} {3}.{4}'.format(self._instrument, self._time,
+                self._duration, self._octave, self_.pitch)
         # If there are additional parameters, add them to the end.
-        if params:
-            formatted.append(' ' + ' '.join(params))
+        if self._params:
+            formatted.append(' ' + ' '.join(self._params))
 
         return formatted
 
     def change_pitch(by):
-        self.pitch_ += by 
+        self._pitch += by 
         # Take mod 12 (there are only 12 notes).
-        self.pitch_ %= 12
+        self._pitch %= 12
 
 
 def run_length_encode(l):
@@ -58,4 +58,3 @@ except:
     # Cache for future use.
     intel_data.to_pickle('intc.pickle')
 
-print(intel_data[0])

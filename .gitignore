@@ -1,7 +1,12 @@
 # System and Misc
 .DS_Store
 .*
-.secret
+*.secret
+# neovim thing?
+*~
+
+# Pickled dataframes
+*.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
