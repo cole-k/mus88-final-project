@@ -1,5 +1,5 @@
 # Mus 88 Final Project
-This is an algorithmically composed song created using Python, Quandl, and
+This is an algorithmically composed song created using Python 3, Quandl, and
 CSound. It plays the 'song' of various stocks, indexes, and ETFs/ETNs.
 
 ## Setup
@@ -11,11 +11,15 @@ Place your API key in a file called `quandl_key.secret`.
 
 ## Running
 
-Run the CSound score generator file so aptly named `generator.py` using the command
+Run the CSound score generator file so aptly named `score_generator.py` using the command
 
 ```
-python generator.py
+python score_generator.py
 ```
+
+N.B. For those with separate Python 2 and 3 installations, you'll want to run
+this with your Python 3 installation for best compatability (though it may
+still work in Python 2).
 
 ## Configuration
 
