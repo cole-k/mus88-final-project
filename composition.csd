@@ -35,7 +35,7 @@ kmod2   linseg  0, p3/2, p10, p3/2, 0
 amod2   oscil   kmod2, imfreq * p9, gisine
 ; decrease over time
 kmod    linseg  imfreq, p3, 0
-kcenv	linseg	0, 0.01, p4, p3-.11, p4, 0.1, 0
+kcenv	linseg	0, 0.01, p5, p3-.11, p5, 0.1, 0
 amod		oscil	idev, imfreq + amod2, p8
 acar		oscil	kcenv, icfreq+amod, gisine
 		out 		acar*0.9
@@ -93,20 +93,3 @@ i1 83 4 10.00 -1 2 1 1 1 1
 
 </CsScore>
 </CsoundSynthesizer>
-<bsbPanel>
- <label>Widgets</label>
- <objectName/>
- <x>100</x>
- <y>100</y>
- <width>320</width>
- <height>240</height>
- <visible>true</visible>
- <uuid/>
- <bgcolor mode="nobackground">
-  <r>255</r>
-  <g>255</g>
-  <b>255</b>
- </bgcolor>
-</bsbPanel>
-<bsbPresets>
-</bsbPresets>
