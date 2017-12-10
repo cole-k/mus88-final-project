@@ -112,6 +112,7 @@ if __name__ == '__main__':
     data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA']
     value_names = ['Open', 'Index Value']
     start_beats = [32, 128]
+    num_iterations = [42, 55]
     round_fn = lambda x: round(x)
     divide_by_10 = lambda x: round(x/10)
     # Function used to smooth the data (a shift by 1 in a value corresponds to
@@ -121,8 +122,9 @@ if __name__ == '__main__':
 
     data_sets = []
     # Fill data_sets
-    for identifier, value_name, start_beat, smoothing_function in \
-        zip(data_identifiers, value_names, start_beats, smoothing_functions):
+    for identifier, value_name, start_beat, iterations, smoothing_function in \
+        zip(data_identifiers, value_names, start_beats, num_iterations,
+            smoothing_functions):
         short_identifier = identifier.split('/')[1].lower()
         pickle_file = short_identifier + '.pickle'
         # Try to read data from the pickled dataframe.
@@ -137,10 +139,10 @@ if __name__ == '__main__':
         # Remove NaNs (apparently there are some in one of the data sets...).
         values = data[value_name].dropna()
         values = values.apply(smoothing_function)
-        data_sets.append((values, start_beat, short_identifier))
+        data_sets.append((values, start_beat, iterations, short_identifier))
 
     with open('output.txt', 'w') as output:
-        for data, start_beat, identifier in data_sets:
+        for data, start_beat, iterations, identifier in data_sets:
             # Write a comment with the identifier of the data.
             output.write('; ' + identifier)
             output.write('\n')
@@ -154,7 +156,7 @@ if __name__ == '__main__':
             # Starting value is the first element, starting length is its
             # duration.
             prev_value, note.duration = next(values_rle)
-            for value, rle in itertools.islice(values_rle, 42):
+            for value, rle in itertools.islice(values_rle, iterations):
                 output.write(str(note))
                 output.write('\n')
                 # Move the time along.
