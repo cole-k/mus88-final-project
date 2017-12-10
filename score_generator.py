@@ -122,7 +122,7 @@ if __name__ == '__main__':
     data_sets = []
     # Fill data_sets
     for identifier, value_name, start_beat, smoothing_function in \
-        zip(data_identifiers, value_names, start_times, smoothing_functions):
+        zip(data_identifiers, value_names, start_beats, smoothing_functions):
         short_identifier = identifier.split('/')[1].lower()
         pickle_file = short_identifier + '.pickle'
         # Try to read data from the pickled dataframe.
