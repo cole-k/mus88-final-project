@@ -29,6 +29,11 @@ This will generate the score file (`score.sco`). There are some extra
 instruments and parts of the score file in my composition that are not
 algorithmically generated, but these are not added to the repo.
 
+Compile the Csound files using
+```
+csound composition.orc score.sco
+```
+
 ## Configuration
 
 I plan on adding command line arguments and other means of configuration at
