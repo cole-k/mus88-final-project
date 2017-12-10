@@ -64,7 +64,7 @@ asig pluck kamp, kfreq, ifreq, ifun, imeth, irough
 
     endin
 
-; supposed to be a piano, currently a sine.
+; simpe sine wave. was meant to be a placeholder but it grew on me too much.
     instr 3
 ifreq = cpspch(p4)
 iamp = p5
@@ -126,6 +126,45 @@ kvamp = kvib * 0.01
 asig1 wgbow iamp, ifreq, kpres, krat, kvibf, kvamp, 1
 ; chorus effect.
       out kenv * (asig1) 
+    endin
+
+; prepiano
+    instr 6
+ifreq = cpspch(p4)
+iamp = p5
+; Number of strings (1-3)
+iNS = 3
+; Amount each string is detued from the base frequency (in cents).
+iD = 8
+; Stiffness paramter.
+iK = 1
+; 30 dB decay time in seconds
+iT30 = 5
+; High-frequency loss parameter.
+iB = 0.002
+; Boundary condition on the left and right ends (leave at 2 for pivoting).
+ibcL = 2
+ibcR = 2
+; Mass of the hammer.
+imass = 1
+; Frequency of the natural vibrations of the hammer.
+ihfvfreq = 5000
+; Position of the hammer.
+iinit = -0.01
+; Position where it strikes.
+ipos = 0.1
+; Velocity of the hammer.
+ivel = 60
+; Scanning frequency and spread.
+isfreq = 0
+isspread = 0.1
+
+kenv linseg 0, 0.02, 1, p3 - 0.10, 1, 0.08, 0
+
+aout prepiano ifreq, iNS, iD, iK, iT30, iB, ibcL, ibcR, imass, ihfvfreq, iinit, \ 
+              ipos, ivel, isfreq, isspread
+; for some reason this needs to be amplified a lot.
+      outs iamp * 10 * kenv * aout
     endin
 
 </CsInstruments>
@@ -341,5 +380,48 @@ i5 330 1 8.00 0.5
 i5 331 1 7.11 0.5
 i5 332 1 8.00 0.5
 i5 333 1 8.02 0.5
+; ice_oj3
+i6 352 1 8.00 0.5
+i6 353 4 8.02 0.5
+i6 357 2 8.00 0.5
+i6 359 3 8.02 0.5
+i6 362 2 8.04 0.5
+i6 364 1 8.02 0.5
+i6 365 1 8.04 0.5
+i6 366 3 8.05 0.5
+i6 369 1 8.07 0.5
+i6 370 4 8.09 0.5
+i6 374 3 8.11 0.5
+i6 377 1 8.09 0.5
+i6 378 2 9.00 0.5
+i6 380 2 9.02 0.5
+i6 382 2 9.04 0.5
+i6 384 3 9.02 0.5
+i6 387 1 9.05 0.5
+i6 388 1 9.07 0.5
+i6 389 2 9.05 0.5
+i6 391 1 9.07 0.5
+i6 392 2 9.05 0.5
+i6 394 4 9.04 0.5
+i6 398 2 9.02 0.5
+i6 400 4 9.04 0.5
+i6 404 1 9.05 0.5
+i6 405 1 9.04 0.5
+i6 406 3 9.02 0.5
+i6 409 5 9.04 0.5
+i6 414 1 9.02 0.5
+i6 415 2 9.04 0.5
+i6 417 7 9.02 0.5
+i6 424 1 9.00 0.5
+i6 425 2 8.11 0.5
+i6 427 1 8.07 0.5
+i6 428 3 8.09 0.5
+i6 431 1 8.07 0.5
+i6 432 1 8.09 0.5
+i6 433 2 8.11 0.5
+i6 435 2 8.09 0.5
+i6 437 1 8.07 0.5
+i6 438 2 8.09 0.5
+i6 440 8 8.11 0.5
 </CsScore>
 </CsoundSynthesizer>

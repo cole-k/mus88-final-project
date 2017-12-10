@@ -109,11 +109,10 @@ def run_length_encode(l):
 
 
 if __name__ == '__main__':
-    data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA', 'CHRIS/CME_CL31']
-    value_names = ['Open', 'Index Value', 'Open']
-    start_beats = [32, 128, 224]
-    list_of_iterations = [42, 40, 55]
-    round_fn = lambda x: round(x)
+    data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA', 'CHRIS/CME_CL31', 'CHRIS/ICE_OJ3']
+    value_names = ['Open', 'Index Value', 'Open', 'Open']
+    start_beats = [32, 128, 224, 352]
+    list_of_iterations = [42, 40, 55, 42]
     divide_by_10 = lambda x: round(x/10)
     mult_by_2 = lambda x: round(x*4)
     # Cmaj
@@ -122,14 +121,16 @@ if __name__ == '__main__':
     i1_params = [0.5, 2, 1, 1, 1, 1]
     i4_params = [0.5]
     i5_params = [0.5]
+    i6_params = [0.5]
     i1_note = Note('C', 8, 0, 1, 1, scale, *i1_params)
     i4_note = Note('C', 8, 0, 1, 4, scale, *i4_params)
     i5_note = Note('C', 8, 0, 1, 5, scale, *i5_params)
-    notes = [i1_note, i4_note, i5_note]
+    i6_note = Note('C', 8, 0, 1, 6, scale, *i6_params)
+    notes = [i1_note, i4_note, i5_note, i6_note]
     # Function used to smooth the data (a shift by 1 in a value corresponds to
     # moving 1 along the scale, so some scaling is needed for data sets with
     # larger variances).
-    smoothing_functions = [round_fn, divide_by_10, mult_by_2]
+    smoothing_functions = [round, divide_by_10, mult_by_2, round]
 
     data_sets = []
     # Fill data_sets
