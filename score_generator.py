@@ -109,22 +109,31 @@ def run_length_encode(l):
 
 
 if __name__ == '__main__':
-    data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA']
-    value_names = ['Open', 'Index Value']
-    start_beats = [32, 128]
-    num_iterations = [42, 55]
+    data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA', 'CHRIS/CME_CL31']
+    value_names = ['Open', 'Index Value', 'Open']
+    start_beats = [32, 128, 224]
+    list_of_iterations = [42, 55, 55]
     round_fn = lambda x: round(x)
     divide_by_10 = lambda x: round(x/10)
+    mult_by_2 = lambda x: round(x*4)
+    # Cmaj
+    scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+    # Parameters for my csd.
+    i1_params = [0.5, 2, 1, 1, 1, 1]
+    i4_params = [0.5]
+    i1_note = Note('C', 8, 0, 1, 1, scale, *i1_params)
+    i4_note = Note('C', 8, 0, 1, 4, scale, *i4_params)
+    notes = [i1_note, i4_note, i1_note]
     # Function used to smooth the data (a shift by 1 in a value corresponds to
     # moving 1 along the scale, so some scaling is needed for data sets with
     # larger variances).
-    smoothing_functions = [round_fn, divide_by_10]
+    smoothing_functions = [round_fn, divide_by_10, mult_by_2]
 
     data_sets = []
     # Fill data_sets
-    for identifier, value_name, start_beat, iterations, smoothing_function in \
-        zip(data_identifiers, value_names, start_beats, num_iterations,
-            smoothing_functions):
+    for identifier, value_name, start_beat, iterations, smoothing_function, \
+        note in zip(data_identifiers, value_names, start_beats,
+                    list_of_iterations, smoothing_functions, notes):
         short_identifier = identifier.split('/')[1].lower()
         pickle_file = short_identifier + '.pickle'
         # Try to read data from the pickled dataframe.
@@ -139,20 +148,18 @@ if __name__ == '__main__':
         # Remove NaNs (apparently there are some in one of the data sets...).
         values = data[value_name].dropna()
         values = values.apply(smoothing_function)
-        data_sets.append((values, start_beat, iterations, short_identifier))
+        data_sets.append((values, start_beat, note, iterations,
+                          short_identifier))
 
     with open('output.txt', 'w') as output:
-        for data, start_beat, iterations, identifier in data_sets:
+        for data, start_beat, note, iterations, identifier in data_sets:
             # Write a comment with the identifier of the data.
             output.write('; ' + identifier)
             output.write('\n')
             # Get the run length encoding of the values.
             values_rle = run_length_encode(data)
-            # Cmaj
-            scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
-            # Parameters for my csd.
-            params = [0.5, 2, 1, 1, 1, 1]
-            note = Note('C', 8, start_beat, 1, 1, scale, *params)
+            # Set the start time.
+            note.time = start_beat
             # Starting value is the first element, starting length is its
             # duration.
             prev_value, note.duration = next(values_rle)
