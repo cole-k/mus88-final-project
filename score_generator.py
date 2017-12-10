@@ -111,7 +111,8 @@ def run_length_encode(l):
 
 
 if __name__ == '__main__':
-    data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA', 'CHRIS/CME_CL31', 'CHRIS/ICE_OJ3']
+    data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA', 'CHRIS/CME_CL31',
+                        'CHRIS/ICE_OJ3']
     value_names = ['Open', 'Index Value', 'Open', 'Open']
     start_beats = [32, 128, 224, 352]
     list_of_iterations = [42, 40, 46, 42]
