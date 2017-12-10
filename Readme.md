@@ -1,6 +1,7 @@
 # Mus 88 Final Project: "Derivative"
 This is an algorithmically composed song created using Python 3, Quandl, and
-CSound. It plays the 'song' of various financial derivatives. 
+CSound. It plays the 'song' of various financial derivatives. You can hear the final 
+version of the composition [here](https://soundcloud.com/cole-ck/derivative).
 
 ## Setup
 
