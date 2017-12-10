@@ -1,4 +1,5 @@
 import quandl
+import itertools
 import pandas as pd
 
 # Translation of notes to numbers
@@ -89,71 +90,77 @@ class Note:
         self.pitch = self.scale[self._pitch_index]
 
 
-def normalize(df, upper=1):
+def run_length_encode(l):
     '''
-    Returns the data frame df normalized from 0 to the range given.
+    Takes a list and returns a generator giving tuples (element, rle)
     '''
-    return df * (upper / max(df))
-
-
-def run_length_encode(l1, l2):
-    '''
-    Takes two lists l1 and l2 and returns a generator giving run length
-    encoding based on l1. The format is (l1_elem, l2_avg, rle) where l2 is
-    averaged over the compressed range.
-    '''
-    count, run_value, l2_sum = 1, l1[0], l2[0]
-    for i, elem in enumerate(l1[1:]):
-        # While equal to the run value, increment and add to l2_sum.
+    count, run_value = 1, l[0]
+    for elem in l[1:]:
+        # While equal to the run value, we increment.
         if elem == run_value:
             count += 1
-            l2_sum += l2[i]
         # Once we encounter a change, yield the run length encoding of the
-        # previous value and the average l2 value.
+        # previous value.
         else:
-            yield run_value, l2_sum / count, count
-            # Start the run length encoding of the current value.
-            count, run_value, l2_sum = 1, elem, 0
+            yield (run_value, count)
+            # We now start the run length encoding of the current value
+            count, run_value = 1, elem
     yield (run_value, count)
 
 
 if __name__ == '__main__':
-    # Try to read data from the pickled dataframe.
-    try:
-        intel_data = pd.read_pickle('intc.pickle')
-    # Otherwise, grab it from the API.
-    except Exception as e:
-        quandl.ApiConfig.api_key = open('quandl_key.secret').read().strip()
-        intel_data = quandl.get("EOD/INTC")
-        # Cache for future use.
-        intel_data.to_pickle('intc.pickle')
+    data_identifiers = ['EOD/INTC', 'NASDAQOMX/NQUSA']
+    value_names = ['Open', 'Index Value']
+    start_beats = [32, 128]
+    round_fn = lambda x: round(x)
+    divide_by_10 = lambda x: round(x/10)
+    # Function used to smooth the data (a shift by 1 in a value corresponds to
+    # moving 1 along the scale, so some scaling is needed for data sets with
+    # larger variances).
+    smoothing_functions = [round_fn, divide_by_10]
+
+    data_sets = []
+    # Fill data_sets
+    for identifier, value_name, start_beat, smoothing_function in \
+        zip(data_identifiers, value_names, start_times, smoothing_functions):
+        short_identifier = identifier.split('/')[1].lower()
+        pickle_file = short_identifier + '.pickle'
+        # Try to read data from the pickled dataframe.
+        try:
+            data = pd.read_pickle(pickle_file)
+        # Otherwise, grab it from the API.
+        except Exception as e:
+            quandl.ApiConfig.api_key = open('quandl_key.secret').read().strip()
+            data = quandl.get(identifier)
+            # Cache for future use.
+            data.to_pickle(pickle_file)
+        # Remove NaNs (apparently there are some in one of the data sets...).
+        values = data[value_name].dropna()
+        values = values.apply(smoothing_function)
+        data_sets.append((values, start_beat, short_identifier))
 
     with open('output.txt', 'w') as output:
-        open_prices = intel_data['Open'].apply(lambda x: round(x))
-        volumes = intel_data['Volume']
-        # Run length encode prices and average volume over the range for which
-        # a price is run-length ecoded.
-        prices_volumes_rle = list(run_length_encode(open_prices, volumes))
-        # Get the tuple containing the max volume and extract the max volume
-        # from it.
-        max_volume = max(prices_volumes_rle, key=lambda t: t[1])[1]
-        # Cmaj
-        scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
-        # Parameters for my csd. params[0] is the volume in dB.
-        params = [-1, 2, 1, 1, 1, 1]
-        note = Note('C', 8, 0, 1, 1, scale, *params)
-        # Starting value is the first element, starting length is its duration,
-        # starting volume is params[0].
-        prev_value, note.params[0], note.duration = prices_volumes_rle[0]
-        for value, volume, rle in prices_volumes_rle[1:42]:
-            output.write(str(note))
+        for data, start_beat, identifier in data_sets:
+            # Write a comment with the identifier of the data.
+            output.write('; ' + identifier)
             output.write('\n')
-            note.time += note.duration
-            # The new duration is the rle of the next value.
-            note.duration = rle
-            # Don't set the volume for now.
-            # note.params[0] = volume / max_volume
-            # print(volume, max_volume)
-            # Change pitch by the delta in value.
-            note.change_pitch(value - prev_value)
-            prev_value = value
+            # Get the run length encoding of the values.
+            values_rle = run_length_encode(data)
+            # Cmaj
+            scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+            # Parameters for my csd.
+            params = [-1, 2, 1, 1, 1, 1]
+            note = Note('C', 8, start_beat, 1, 1, scale, *params)
+            # Starting value is the first element, starting length is its duration.
+            prev_value, note.duration = next(values_rle)
+            for value, rle in itertools.islice(values_rle, 42):
+                output.write(str(note))
+                output.write('\n')
+                # Move the time along.
+                note.time += note.duration
+                # The new duration is the rle of the next value.
+                note.duration = rle
+                # Change pitch by the delta in value.
+                note.change_pitch(value - prev_value)
+                prev_value = value
+            # Write a separator.
