@@ -5,8 +5,8 @@
 *.pdf
 # neovim thing?
 *~
-# couldn't think of a better output file name.
-output.txt
+# score files
+*.sco
 
 # Sound files
 *.aif
